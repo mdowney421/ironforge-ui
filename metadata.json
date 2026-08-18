@@ -1,0 +1,6 @@
+{
+  "name": "IronForge Pro",
+  "description": "High-performance dark-mode workout tracker and training log with live session tracking, template builder, and 1RM progression analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

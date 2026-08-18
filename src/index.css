@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-anybody: 'Anybody', sans-serif;
+    --font-hanken: 'Hanken Grotesk', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    background-color: #000000;
+    color: #e5e2e1;
+    font-family: 'Hanken Grotesk', sans-serif;
+  }
+}
+
+.font-headline,
+.font-headline-md,
+.font-headline-lg,
+.font-headline-lg-mobile,
+.font-display-lg {
+  font-family: 'Anybody', sans-serif;
+}
+
+.font-body-md,
+.font-body-lg {
+  font-family: 'Hanken Grotesk', sans-serif;
+}
+
+.font-data-display,
+.font-label-caps {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.fill,
+.filled-icon {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Custom glow and utility classes */
+.timer-glow {
+  text-shadow: 0 0 12px rgba(195, 244, 0, 0.45);
+}
+
+.neon-glow-btn {
+  box-shadow: 0 0 16px rgba(195, 244, 0, 0.35);
+}
+
+.neon-border-glow {
+  box-shadow: 0 0 10px rgba(195, 244, 0, 0.2);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #131313;
+}
+::-webkit-scrollbar-thumb {
+  background: #353534;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c3f400;
+}
+
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes drawLine {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 1.8s ease-out forwards;
+}
+
+.pulse-point {
+  animation: pulsePoint 2s infinite ease-in-out;
+}
+
+@keyframes pulsePoint {
+  0%, 100% { r: 2.5; opacity: 1; filter: drop-shadow(0 0 3px #c3f400); }
+  50% { r: 4; opacity: 0.8; filter: drop-shadow(0 0 8px #c3f400); }
+}
+
