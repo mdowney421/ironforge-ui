@@ -17,6 +17,7 @@ import { ProfileScreen } from "./components/ProfileScreen";
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>("dashboard");
+  const [templateToEdit, setTemplateToEdit] = useState<WorkoutTemplate | null>(null);
   const [templates, setTemplates] = useState<WorkoutTemplate[]>(() => {
     const saved = localStorage.getItem("ironforge_templates");
     if (saved) {
@@ -150,9 +151,31 @@ export default function App() {
     setCurrentScreen("dashboard");
   };
 
-  const handleSaveNewTemplate = (newTemplate: WorkoutTemplate) => {
-    setTemplates((prev) => [newTemplate, ...prev]);
-    setCurrentScreen("dashboard");
+  const handleSaveNewTemplate = (newTemplate: WorkoutTemplate, existingId?: string) => {
+    if (existingId) {
+      setTemplates((prev) =>
+        prev.map((template) =>
+          template.id === existingId ? { ...newTemplate, id: existingId } : template
+        )
+      );
+    } else {
+      setTemplates((prev) => [newTemplate, ...prev]);
+    }
+
+    setTemplateToEdit(null);
+    setCurrentScreen('dashboard');
+  };
+
+  const handleEditTemplate = (template: WorkoutTemplate) => {
+    setTemplateToEdit(template);
+    setCurrentScreen('create_workout');
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    setTemplates((prev) => prev.filter((template) => template.id !== templateId));
+    if (templateToEdit?.id === templateId) {
+      setTemplateToEdit(null);
+    }
   };
 
   return (
@@ -171,8 +194,8 @@ export default function App() {
         {currentScreen === "dashboard" && (
           <DashboardScreen
             templates={templates}
-            onStartWorkout={handleStartWorkout}
-            onNavigate={(screen) => setCurrentScreen(screen)}
+            onStartWorkout={handleStartWorkout}            onEditTemplate={handleEditTemplate}
+            onDeleteTemplate={handleDeleteTemplate}            onNavigate={(screen) => setCurrentScreen(screen)}
             userWeeklyVolume={weeklyVolume}
             userWorkoutsCompleted={workoutsCompleted}
           />
@@ -190,8 +213,12 @@ export default function App() {
 
         {currentScreen === "create_workout" && (
           <TemplateBuilderScreen
+            initialTemplate={templateToEdit}
             onSaveTemplate={handleSaveNewTemplate}
-            onCancel={() => setCurrentScreen("dashboard")}
+            onCancel={() => {
+              setTemplateToEdit(null);
+              setCurrentScreen('dashboard');
+            }}
             onNavigate={(screen) => setCurrentScreen(screen)}
           />
         )}

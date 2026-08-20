@@ -1,49 +1,75 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { WorkoutTemplate, TemplateExercise, SetEntry, ScreenType } from '../types';
-import { EXERCISE_LIBRARY } from '../data/mockData';
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  WorkoutTemplate,
+  TemplateExercise,
+  SetEntry,
+  ScreenType,
+} from "../types";
+import { EXERCISE_LIBRARY } from "../data/mockData";
 
 interface TemplateBuilderScreenProps {
-  onSaveTemplate: (template: WorkoutTemplate) => void;
+  initialTemplate?: WorkoutTemplate | null;
+  onSaveTemplate: (template: WorkoutTemplate, existingId?: string) => void;
   onCancel: () => void;
   onNavigate: (screen: ScreenType) => void;
 }
 
+const DEFAULT_EXERCISES: TemplateExercise[] = [
+  {
+    id: "builder-ex-1",
+    name: "Barbell Squat",
+    targetMuscle: "Legs",
+    category: "Compound",
+    sets: [
+      { setNumber: 1, targetWeight: 135, targetReps: 12 },
+      { setNumber: 2, targetWeight: 225, targetReps: 8 },
+    ],
+  },
+  {
+    id: "builder-ex-2",
+    name: "Romanian Deadlift",
+    targetMuscle: "Legs",
+    category: "Hamstrings",
+    sets: [
+      { setNumber: 1, targetWeight: 185, targetReps: 10 },
+      { setNumber: 2, targetWeight: 225, targetReps: 8 },
+    ],
+  },
+];
+
 export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
+  initialTemplate,
   onSaveTemplate,
   onCancel,
 }) => {
-  const [templateName, setTemplateName] = useState('Heavy Legs Day');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'CHEST' | 'BACK' | 'LEGS' | 'CORE' | 'SHOULDERS'>('ALL');
-  const [collapsedExercises, setCollapsedExercises] = useState<Record<string, boolean>>({
-    'builder-ex-2': true,
+  const [templateName, setTemplateName] = useState(
+    initialTemplate?.name ?? "Heavy Legs Day",
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<
+    "ALL" | "CHEST" | "BACK" | "LEGS" | "CORE" | "SHOULDERS"
+  >("ALL");
+  const [collapsedExercises, setCollapsedExercises] = useState<
+    Record<string, boolean>
+  >({
+    "builder-ex-2": true,
   });
   const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
 
-  // Initial template exercises
-  const [exercises, setExercises] = useState<TemplateExercise[]>([
-    {
-      id: 'builder-ex-1',
-      name: 'Barbell Squat',
-      targetMuscle: 'Legs',
-      category: 'Compound',
-      sets: [
-        { setNumber: 1, targetWeight: 135, targetReps: 12 },
-        { setNumber: 2, targetWeight: 225, targetReps: 8 },
-      ],
-    },
-    {
-      id: 'builder-ex-2',
-      name: 'Romanian Deadlift',
-      targetMuscle: 'Legs',
-      category: 'Hamstrings',
-      sets: [
-        { setNumber: 1, targetWeight: 185, targetReps: 10 },
-        { setNumber: 2, targetWeight: 225, targetReps: 8 },
-      ],
-    },
-  ]);
+  const [exercises, setExercises] = useState<TemplateExercise[]>(
+    initialTemplate?.exercises ?? DEFAULT_EXERCISES,
+  );
+
+  useEffect(() => {
+    if (initialTemplate) {
+      setTemplateName(initialTemplate.name);
+      setExercises(initialTemplate.exercises);
+    } else {
+      setTemplateName("Heavy Legs Day");
+      setExercises(DEFAULT_EXERCISES);
+    }
+  }, [initialTemplate]);
 
   const toggleCollapse = (id: string) => {
     setCollapsedExercises((prev) => ({
@@ -52,7 +78,12 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
     }));
   };
 
-  const handleUpdateSet = (exerciseId: string, setIndex: number, field: 'targetWeight' | 'targetReps', val: number) => {
+  const handleUpdateSet = (
+    exerciseId: string,
+    setIndex: number,
+    field: "targetWeight" | "targetReps",
+    val: number,
+  ) => {
     setExercises((prev) =>
       prev.map((ex) => {
         if (ex.id === exerciseId) {
@@ -64,7 +95,7 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
           return { ...ex, sets: updatedSets };
         }
         return ex;
-      })
+      }),
     );
   };
 
@@ -81,7 +112,7 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
           return { ...ex, sets: [...ex.sets, newSet] };
         }
         return ex;
-      })
+      }),
     );
   };
 
@@ -89,7 +120,7 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
     setExercises((prev) => prev.filter((e) => e.id !== exerciseId));
   };
 
-  const handleSelectFromLibrary = (libItem: typeof EXERCISE_LIBRARY[0]) => {
+  const handleSelectFromLibrary = (libItem: (typeof EXERCISE_LIBRARY)[0]) => {
     const newEx: TemplateExercise = {
       id: `builder-ex-${Date.now()}`,
       name: libItem.name,
@@ -106,34 +137,39 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
 
   const handleSave = () => {
     if (!templateName.trim()) {
-      alert('Please enter a template name');
+      alert("Please enter a template name");
       return;
     }
     if (exercises.length === 0) {
-      alert('Please add at least one exercise');
+      alert("Please add at least one exercise");
       return;
     }
 
-    const uniqueTags: string[] = Array.from(new Set(exercises.map((e) => e.targetMuscle.toUpperCase())));
+    const uniqueTags: string[] = Array.from(
+      new Set(exercises.map((e) => e.targetMuscle.toUpperCase())),
+    );
 
     const newTemplate: WorkoutTemplate = {
-      id: `template-${Date.now()}`,
+      id: initialTemplate?.id ?? `template-${Date.now()}`,
       name: templateName.trim(),
-      tags: uniqueTags.length > 0 ? uniqueTags : ['LEGS', 'COMPOUND'],
+      tags: uniqueTags.length > 0 ? uniqueTags : ["LEGS", "COMPOUND"],
       durationMinutes: exercises.length * 12 + 10,
       exercisesCount: exercises.length,
-      accentColor: 'cyan',
+      accentColor: initialTemplate?.accentColor ?? "cyan",
       exercises,
     };
 
-    onSaveTemplate(newTemplate);
+    onSaveTemplate(newTemplate, initialTemplate?.id);
   };
 
   // Filter library items for modal or quick lookup
   const filteredLibrary = EXERCISE_LIBRARY.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.muscle.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCat = selectedCategory === 'ALL' || item.muscle.toUpperCase() === selectedCategory;
+    const matchesCat =
+      selectedCategory === "ALL" ||
+      item.muscle.toUpperCase() === selectedCategory;
     return matchesSearch && matchesCat;
   });
 
@@ -166,14 +202,19 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
                 aria-label="Cancel"
                 className="w-12 h-12 flex items-center justify-center rounded-full bg-[#353534] text-[#c4c9ac] hover:text-white active:scale-95 transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[24px]">close</span>
+                <span className="material-symbols-outlined text-[24px]">
+                  close
+                </span>
               </button>
               <button
                 onClick={handleSave}
                 aria-label="Save Template"
                 className="w-12 h-12 flex items-center justify-center rounded-full bg-[#c3f400] text-[#161e00] active:scale-95 transition-all shadow-[0_0_12px_rgba(195,244,0,0.3)] cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span
+                  className="material-symbols-outlined text-[26px]"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
                   check
                 </span>
               </button>
@@ -198,14 +239,16 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
 
           {/* Filter Chips */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {(['ALL', 'CHEST', 'BACK', 'LEGS', 'CORE', 'SHOULDERS'] as const).map((cat) => (
+            {(
+              ["ALL", "CHEST", "BACK", "LEGS", "CORE", "SHOULDERS"] as const
+            ).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-1.5 rounded-full text-xs font-mono font-semibold uppercase whitespace-nowrap active:scale-95 transition-all cursor-pointer ${
                   selectedCategory === cat
-                    ? 'border border-[#c3f400] bg-[#c3f400] text-[#161e00]'
-                    : 'border border-[#444933] bg-transparent text-[#c4c9ac] hover:border-[#c3f400] hover:text-white'
+                    ? "border border-[#c3f400] bg-[#c3f400] text-[#161e00]"
+                    : "border border-[#444933] bg-transparent text-[#c4c9ac] hover:border-[#c3f400] hover:text-white"
                 }`}
               >
                 {cat}
@@ -231,7 +274,9 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-[#2a2a2a] flex items-center justify-center text-[#c4c9ac]">
-                      <span className="material-symbols-outlined text-[20px]">fitness_center</span>
+                      <span className="material-symbols-outlined text-[20px]">
+                        fitness_center
+                      </span>
                     </div>
                     <div>
                       <h3 className="font-headline font-bold text-xl md:text-2xl text-white tracking-tight leading-tight">
@@ -253,11 +298,16 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
                       className="text-[#8e9379] hover:text-[#ffb4ab] p-1.5 rounded-full"
                       aria-label="Remove exercise"
                     >
-                      <span className="material-symbols-outlined text-[20px]">delete</span>
+                      <span className="material-symbols-outlined text-[20px]">
+                        delete
+                      </span>
                     </button>
-                    <button className="text-[#c4c9ac] p-1" aria-label="Expand/Collapse">
+                    <button
+                      className="text-[#c4c9ac] p-1"
+                      aria-label="Expand/Collapse"
+                    >
                       <span className="material-symbols-outlined text-[22px]">
-                        {isCollapsed ? 'expand_more' : 'expand_less'}
+                        {isCollapsed ? "expand_more" : "expand_less"}
                       </span>
                     </button>
                   </div>
@@ -268,7 +318,7 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
                   {!isCollapsed && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
+                      animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       className="p-4 pt-2 flex flex-col gap-2 bg-[#131313]"
                     >
@@ -297,9 +347,14 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
                           <div className="col-span-5 relative">
                             <input
                               type="number"
-                              value={set.targetWeight || ''}
+                              value={set.targetWeight || ""}
                               onChange={(e) =>
-                                handleUpdateSet(ex.id, setIdx, 'targetWeight', parseInt(e.target.value) || 0)
+                                handleUpdateSet(
+                                  ex.id,
+                                  setIdx,
+                                  "targetWeight",
+                                  parseInt(e.target.value) || 0,
+                                )
                               }
                               className="w-full bg-[#201f1f] text-center font-mono text-base font-bold text-white rounded py-2 border border-[#353534] focus:border-[#c3f400] focus:ring-0 focus:outline-none pr-8"
                               placeholder="0"
@@ -311,9 +366,14 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
                           <div className="col-span-5">
                             <input
                               type="number"
-                              value={set.targetReps || ''}
+                              value={set.targetReps || ""}
                               onChange={(e) =>
-                                handleUpdateSet(ex.id, setIdx, 'targetReps', parseInt(e.target.value) || 0)
+                                handleUpdateSet(
+                                  ex.id,
+                                  setIdx,
+                                  "targetReps",
+                                  parseInt(e.target.value) || 0,
+                                )
                               }
                               className="w-full bg-[#201f1f] text-center font-mono text-base font-bold text-white rounded py-2 border border-[#353534] focus:border-[#c3f400] focus:ring-0 focus:outline-none"
                               placeholder="0"
@@ -327,7 +387,10 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
                         onClick={() => handleAddSetToExercise(ex.id)}
                         className="mt-2 w-full py-3 rounded-lg border border-dashed border-[#444933] text-[#c4c9ac] font-mono text-xs uppercase font-semibold flex items-center justify-center gap-2 hover:border-[#c3f400] hover:text-[#c3f400] active:bg-[#201f1f] transition-all cursor-pointer"
                       >
-                        <span className="material-symbols-outlined text-[18px]">add</span> Add Set
+                        <span className="material-symbols-outlined text-[18px]">
+                          add
+                        </span>{" "}
+                        Add Set
                       </button>
                     </motion.div>
                   )}
@@ -341,7 +404,10 @@ export const TemplateBuilderScreen: React.FC<TemplateBuilderScreenProps> = ({
             onClick={() => setShowAddExerciseModal(true)}
             className="w-full py-4 mt-2 rounded-xl bg-[#201f1f] border border-[#353534] text-[#c3f400] font-headline text-lg font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-[0_0_15px_rgba(195,244,0,0.1)] hover:border-[#c3f400] cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[24px]">add_circle</span> Add Another Exercise
+            <span className="material-symbols-outlined text-[24px]">
+              add_circle
+            </span>{" "}
+            Add Another Exercise
           </button>
         </section>
       </main>
